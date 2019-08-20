@@ -44,11 +44,11 @@ class MainViewController: UITableViewController {
         case 0:
             type = .basic
         case 1:
-            type = .custom
-        case 2:
-            type = .change
-        case 3:
             type = .dragAndDrop
+        case 2:
+            type = .custom
+        case 3:
+            type = .change
         default:
             type = .basic
         }

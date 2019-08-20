@@ -23,7 +23,7 @@ class LayoutViewController: UIViewController {
 
     private lazy var dataSource: [String] = {
         var arr: [String] = []
-        for name in 1..<14 {
+        for name in 1..<15 {
             arr.append("\(name)")
         }
         return arr
@@ -38,6 +38,19 @@ class LayoutViewController: UIViewController {
             layout.scrollDirection = .vertical
             layout.itemSize = CGSize(width: UIScreen.main.bounds.size.width, height: UIScreen.main.bounds.size.width)
             self.collectionView.collectionViewLayout = layout
+        case .dragAndDrop:
+            let layout = UICollectionViewFlowLayout()
+            layout.scrollDirection = .vertical
+            layout.minimumLineSpacing = 10
+            layout.minimumInteritemSpacing = 10
+            layout.itemSize = CGSize(width: (UIScreen.main.bounds.size.width - 20) / 3, height: (UIScreen.main.bounds.size.width - 20) / 3)
+            self.collectionView.collectionViewLayout = layout
+
+            // 开启拖放手势，设置代理。
+            self.collectionView.dragInteractionEnabled = true
+            self.collectionView.dragDelegate = self
+            self.collectionView.dropDelegate = self
+
         case .custom:
             let layout = CustomCollectionViewLayout()
             self.collectionView.collectionViewLayout = layout
@@ -45,16 +58,9 @@ class LayoutViewController: UIViewController {
             let layout = UICollectionViewFlowLayout()
             layout.scrollDirection = .vertical
             layout.itemSize = CGSize(width: UIScreen.main.bounds.size.width, height: UIScreen.main.bounds.size.width)
-            
+
             self.collectionView.collectionViewLayout = layout
             self.navigationItem.rightBarButtonItem = UIBarButtonItem(title: "Change", style: .plain, target: self, action: #selector(changeLayout))
-        case .dragAndDrop:
-            let layout = UICollectionViewFlowLayout()
-            layout.scrollDirection = .horizontal
-            layout.minimumLineSpacing = 10
-            layout.minimumInteritemSpacing = 10
-            layout.itemSize = CGSize(width: (UIScreen.main.bounds.size.width - 20) / 3, height: (UIScreen.main.bounds.size.width - 20) / 3)
-            self.collectionView.collectionViewLayout = layout
         }
         
         self.collectionView.backgroundColor = UIColor.white
@@ -90,13 +96,80 @@ extension LayoutViewController: UICollectionViewDelegate, UICollectionViewDataSo
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "ImageCell", for: indexPath) as! ImageCell
         
-        let random = Int(arc4random()%14) + 1
+        let random = dataSource[indexPath.row]
         
         cell.showImage.image = UIImage(named: "\(random)")
 
         return cell
     }
 }
+
+
+extension LayoutViewController: UICollectionViewDragDelegate {
+    func collectionView(_ collectionView: UICollectionView, itemsForBeginning session: UIDragSession, at indexPath: IndexPath) -> [UIDragItem] {
+
+        let imageName = self.dataSource[indexPath.row]
+
+        let image = UIImage(named: imageName)!
+
+        let provider = NSItemProvider(object: image)
+
+        let dragItem = UIDragItem(itemProvider: provider)
+
+        return [dragItem]
+    }
+
+    /*
+        自定义拖动过程中 cell 外观。返回 nil 则以 cell 原样式呈现。
+     */
+    func collectionView(_ collectionView: UICollectionView, dragPreviewParametersForItemAt indexPath: IndexPath) -> UIDragPreviewParameters? {
+        return nil
+    }
+}
+
+extension LayoutViewController: UICollectionViewDropDelegate {
+    func collectionView(_ collectionView: UICollectionView, dropSessionDidUpdate session: UIDropSession, withDestinationIndexPath destinationIndexPath: IndexPath?) -> UICollectionViewDropProposal {
+        if session.localDragSession != nil {
+            return UICollectionViewDropProposal(operation: .move, intent: .insertAtDestinationIndexPath)
+        } else {
+            return UICollectionViewDropProposal(operation: .copy, intent: .insertAtDestinationIndexPath)
+        }
+    }
+
+    /*
+        当手指离开屏幕时，UICollectionView 会调用。必须实现该方法以接收拖动的数据。
+     */
+    func collectionView(_ collectionView: UICollectionView, performDropWith coordinator: UICollectionViewDropCoordinator) {
+        let destinationIndexPath = coordinator.destinationIndexPath ?? IndexPath(item: 0, section: 0)
+
+        switch coordinator.proposal.operation {
+        case .move:
+            let items = coordinator.items
+
+            if items.contains(where: { $0.sourceIndexPath != nil }) {
+                if items.count == 1, let item = items.first {
+
+                    let temp = dataSource[item.sourceIndexPath!.row]
+
+                    dataSource.remove(at: item.sourceIndexPath!.row)
+                    dataSource.insert(temp, at: destinationIndexPath.row)
+
+                    // Reordering a single item from this collection view.
+                    collectionView.performBatchUpdates({
+                        collectionView.deleteItems(at: [item.sourceIndexPath!])
+                        collectionView.insertItems(at: [destinationIndexPath])
+                    })
+
+                    coordinator.drop(item.dragItem, toItemAt: destinationIndexPath)
+                }
+            }
+        default:
+            return
+        }
+
+    }
+}
+
 
 
 
