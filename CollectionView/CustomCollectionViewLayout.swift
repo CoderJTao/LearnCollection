@@ -12,21 +12,11 @@ import UIKit
 class CustomCollectionViewLayout: UICollectionViewLayout {
     private var itemWidth: CGFloat = 0
     private var itemHeight: CGFloat = 0
-    private var lineSpace: CGFloat = 0
-    private var sectionInsets = UIEdgeInsets.zero
 
     private var currentX: CGFloat = 0
     private var currentY: CGFloat = 0
 
     private var attrubutesArray = [UICollectionViewLayoutAttributes]()
-
-    override init() {
-        super.init()
-    }
-
-    required init?(coder aDecoder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
 
     // 提供滚动范围
     override var collectionViewContentSize: CGSize {
@@ -41,7 +31,7 @@ class CustomCollectionViewLayout: UICollectionViewLayout {
 
     override func layoutAttributesForItem(at indexPath: IndexPath) -> UICollectionViewLayoutAttributes? {
         // 获取宽度
-        let contentWidth = self.collectionView!.frame.size.width - sectionInsets.left - sectionInsets.right
+        let contentWidth = self.collectionView!.frame.size.width
 
         // 通过 indexpath 创建一个 item 属性
         let temp = UICollectionViewLayoutAttributes(forCellWith: indexPath)
@@ -135,11 +125,6 @@ class CustomCollectionViewLayout: UICollectionViewLayout {
         super.prepare()
 
         guard let count = self.collectionView?.numberOfItems(inSection: 0) else { return }
-
-        // 初始化首个 item 位置
-        currentX = sectionInsets.left
-        currentY = sectionInsets.top
-
         // 得到每个 item 的属性并存储
         for i in 0..<count {
             let indexPath = IndexPath(row: i, section: 0)

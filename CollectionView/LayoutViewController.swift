@@ -65,7 +65,6 @@ class LayoutViewController: UIViewController {
         
         self.collectionView.backgroundColor = UIColor.white
         self.collectionView.dataSource = self
-        self.collectionView.delegate = self
         self.collectionView.register(UINib(nibName: "ImageCell", bundle: nil), forCellWithReuseIdentifier: "ImageCell")
         self.view.addSubview(self.collectionView)
     }
@@ -88,9 +87,9 @@ class LayoutViewController: UIViewController {
     }
 }
 
-extension LayoutViewController: UICollectionViewDelegate, UICollectionViewDataSource {
+extension LayoutViewController: UICollectionViewDataSource {
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        return 14
+        return dataSource.count
     }
 
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
@@ -130,8 +129,10 @@ extension LayoutViewController: UICollectionViewDragDelegate {
 extension LayoutViewController: UICollectionViewDropDelegate {
     func collectionView(_ collectionView: UICollectionView, dropSessionDidUpdate session: UIDropSession, withDestinationIndexPath destinationIndexPath: IndexPath?) -> UICollectionViewDropProposal {
         if session.localDragSession != nil {
+            // 拖动手势源自同一app。
             return UICollectionViewDropProposal(operation: .move, intent: .insertAtDestinationIndexPath)
         } else {
+            // 拖动手势源自其它app。
             return UICollectionViewDropProposal(operation: .copy, intent: .insertAtDestinationIndexPath)
         }
     }
@@ -154,7 +155,7 @@ extension LayoutViewController: UICollectionViewDropDelegate {
                     dataSource.remove(at: item.sourceIndexPath!.row)
                     dataSource.insert(temp, at: destinationIndexPath.row)
 
-                    // Reordering a single item from this collection view.
+                    // 将 collectionView 的多个操作合并为一个动画。
                     collectionView.performBatchUpdates({
                         collectionView.deleteItems(at: [item.sourceIndexPath!])
                         collectionView.insertItems(at: [destinationIndexPath])
