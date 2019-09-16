@@ -136,6 +136,6 @@ class CustomCollectionViewLayout: UICollectionViewLayout {
 
     // 处理自定义布局中的边界修改
     override func shouldInvalidateLayout(forBoundsChange newBounds: CGRect) -> Bool {
-        return true
+        return false
     }
 }
