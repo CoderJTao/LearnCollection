@@ -135,6 +135,7 @@ class CustomCollectionViewLayout: UICollectionViewLayout {
     }
 
     // 处理自定义布局中的边界修改
+    // 返回 true 使集合视图重新查询几何信息的布局
     override func shouldInvalidateLayout(forBoundsChange newBounds: CGRect) -> Bool {
         return false
     }
